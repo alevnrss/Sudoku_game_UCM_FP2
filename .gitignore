@@ -1,0 +1,37 @@
+# --- Visual Studio ---
+.vs/
+[Bb]in/
+[Oo]bj/
+[Dd]ebug/
+[Rr]elease/
+*.user
+*.userosscache
+*.sln.docstates
+
+# --- Archivos de compilación (C++) ---
+*.sdf
+*.opensdf
+*.VC.db
+*.VC.opendb
+*.ipch
+*.aps
+*.ncb
+*.tlog
+*.log
+*.ilk
+*.exe
+*.pdb
+*.obj
+*.iobj
+*.ipdb
+*.lib
+*.dll
+
+# --- Carpetas de salida comunes de MSBuild ---
+x64/
+x86/
+ARM/
+ARM64/
+
+# --- Otros ---
+.DS_Store
