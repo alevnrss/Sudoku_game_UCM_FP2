@@ -20,11 +20,16 @@
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="Celda.cpp" />
+    <ClCompile Include="InputOutput.cpp" />
     <ClCompile Include="Main.cpp" />
+    <ClCompile Include="Sudoku.cpp" />
     <ClCompile Include="Tablero.cpp" />
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="Celda.h" />
+    <ClInclude Include="colors.h" />
+    <ClInclude Include="InputOutput.h" />
+    <ClInclude Include="Sudoku.h" />
     <ClInclude Include="Tablero.h" />
   </ItemGroup>
   <PropertyGroup Label="Globals">
@@ -33,6 +38,7 @@
     <ProjectGuid>{38a4a586-a25a-401b-8ad0-14c59cb63dd5}</ProjectGuid>
     <RootNamespace>Laboratorio18febreroTablerosCeldas</RootNamespace>
     <WindowsTargetPlatformVersion>10.0</WindowsTargetPlatformVersion>
+    <ProjectName>Laboratorio_18_febrero_Tableros_Celdas</ProjectName>
   </PropertyGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.Default.props" />
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'" Label="Configuration">
