@@ -26,7 +26,7 @@ struct tBloqueos {
 
 struct tSudoku {
 	tTablero tablero;
-	int cont_numeros;
+	int cont_numeros;// contador de celdas no vacias
 	tBloqueos celdas_bloqueadas;
 };
 
