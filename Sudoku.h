@@ -39,17 +39,10 @@ bool carga_sudoku(ifstream& archivo, tSudoku& s);		// PASO 2
 // Operaciones de consulta del estado
 int dame_dimension(const tSudoku& s);
 tCelda dame_celda(const tSudoku& s, int fila, int columna);
-bool terminado(const tSudoku& s);
-bool bloqueo(const tSudoku& s);
-int dame_num_celdas_bloqueadas(const tSudoku& s);
-// tCelda dame_celda_bloqueada(const tSudoku& s,...);
-bool es_valor_posible(const tSudoku& s, int f, int c, int v);
+bool esValida(tPosicion pos, const tSudoku& s);
+bool es_valor_posible(const tSudoku& s, tPosicion pos, int v);
 
 // Operaciones de modificacion del estado
-void pon_valor(tSudoku& s, int f, int c, int v);
-void quita_valor(tSudoku& s, int f, int c);
-void reset(tSudoku& s);
-void autocompleta(tSudoku& s);
-
-
+bool pon_valor_sudoku(tSudoku& s, int f, int c, int v);
+bool quitar_valor_sudoku(tSudoku& s, int f, int c);
 #endif

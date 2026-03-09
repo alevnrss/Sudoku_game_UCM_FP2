@@ -42,5 +42,100 @@ tCelda dame_celda(const tSudoku& s, int f, int c) {
 	return s.tablero.matriz[f][c];
 }
 
+bool esValida(tPosicion pos, const tSudoku& s) {
+	bool e;
+	if ((pos.fila > s.tablero.dimension || pos.fila < -1) || (pos.columna > s.tablero.dimension || pos.columna < -1) || (es_vacia(s.tablero.matriz[pos.fila][pos.columna]) == false)) {
+		e = false;
+	}
+	else {
+		e = true;
+	}
+
+	return e;
+}
+
+bool busqueda_valor_filacolumna(const tSudoku& s, tPosicion pos, int v) {
+	bool e = false;
+	int cursor_fila = 0;
+	int cursor_col = 0;
+	while (!e && cursor_fila < s.tablero.dimension) {
+		if (s.tablero.matriz[pos.fila][cursor_fila].valor == v) {
+			e = true;
+		}
+		else {
+			cursor_fila++;
+		}
+	}
+
+	if (e == false) {
+		while (!e && cursor_col < s.tablero.dimension) {
+			if (s.tablero.matriz[cursor_col][pos.columna].valor == v) {
+				e = true;
+			}
+			else {
+				cursor_col++;
+			}
+		}
+	}
+	return e;
+}
+
+bool buscar_subcuadricula(const tSudoku& s, tPosicion pos, int v) {
+	bool e = false;
+	tPosicion pos_esquina_izq;
+	int raizDim = sqrt(s.tablero.dimension);// tamaño de las subcuadriculas
+	pos_esquina_izq.fila = pos.fila - (pos.fila % raizDim);
+	pos_esquina_izq.columna = pos.columna - (pos.columna % raizDim);
+	int cursor_fila = pos_esquina_izq.fila;
+	int cursor_col = pos_esquina_izq.columna;
+
+	while (!e && cursor_fila < pos_esquina_izq.fila + raizDim) {
+		cursor_col = pos_esquina_izq.columna;
+		while (!e && cursor_col < pos_esquina_izq.columna + raizDim) {
+			if (s.tablero.matriz[cursor_fila][cursor_col].valor == v) {
+				e = true;
+			}
+			else {
+				cursor_col++;
+			}
+		}
+		cursor_fila++;
+	}
+
+	return e;
+}
 
 
+bool es_valor_posible(const tSudoku& s, tPosicion pos, int v) {
+	bool e;
+	if (busqueda_valor_filacolumna(s, pos, v) == true || buscar_subcuadricula(s, pos, v) == true || esValida(pos, s) == false) {
+		e = false;
+	}
+	else {
+		e = true;
+	}
+
+	return e;
+
+}
+
+bool pon_valor_sudoku(tSudoku& s, int f, int c, int v) {
+	bool e = false;
+	if (es_valor_posible(s, {f,c}, v) == true) {
+		pon_valor(s.tablero.matriz[f][c], v);	// Subprograma de Celda.cpp
+		pon_ocupada(s.tablero.matriz[f][c]);	// Subprograma de Celda.cpp
+		s.cont_numeros++;
+		e = true;
+	}
+	return e;
+}
+
+bool quitar_valor_sudoku(tSudoku& s, int f, int c) {
+	bool e = false;
+	if (es_vacia(s.tablero.matriz[f][c]) == false && es_original(s.tablero.matriz[f][c]) == false) {
+		pon_vacia(s.tablero.matriz[f][c]);	// Subprograma de Celda.cpp
+		s.cont_numeros--;
+		e = true;
+	}
+	return e;
+}
