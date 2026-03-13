@@ -44,7 +44,7 @@ tCelda dame_celda(const tSudoku& s, int f, int c) {
 
 bool esValida(tPosicion pos, const tSudoku& s) {
 	bool e;
-	if ((pos.fila > s.tablero.dimension || pos.fila < -1) || (pos.columna > s.tablero.dimension || pos.columna < -1) || (es_vacia(s.tablero.matriz[pos.fila][pos.columna]) == false)) {
+	if ((pos.fila > s.tablero.dimension || pos.fila < 0) || (pos.columna > s.tablero.dimension || pos.columna < 0) || (es_vacia(s.tablero.matriz[pos.fila][pos.columna]) == false)) {
 		e = false;
 	}
 	else {
@@ -108,14 +108,21 @@ bool buscar_subcuadricula(const tSudoku& s, tPosicion pos, int v) {
 
 bool es_valor_posible(const tSudoku& s, tPosicion pos, int v) {
 	bool e;
-	if (busqueda_valor_filacolumna(s, pos, v) == true || buscar_subcuadricula(s, pos, v) == true || esValida(pos, s) == false) {
+
+	if(v < 1 || v > s.tablero.dimension) {
 		e = false;
 	}
 	else {
-		e = true;
-	}
+		if (busqueda_valor_filacolumna(s, pos, v) == true || buscar_subcuadricula(s, pos, v) == true || esValida(pos, s) == false) {
+			e = false;
+		}
+		else {
+			e = true;
+		}
 
-	return e;
+		return e;
+	}
+	
 
 }
 
