@@ -58,6 +58,8 @@ int main() {
 				}
 				break;
 			case 3:
+				reset(s);
+				cout << "El sudoku ha sido restaurado correctamente";
 				break;
 			case 4:
 				pos_introducido = pide_pos();
@@ -68,9 +70,20 @@ int main() {
 					valores_posibles(s, pos_introducido);
 				}
 				break;
+			case 5: 
+				autocompleta(s);
+				cout << "Las posiciones VACIAS del sudoku con un unico valor se han completado correctamente";
+				break;
 			}
 			mostrar_juego_consola(s);
-			opcion = menu();
+
+			if (terminado(s)) {
+				cout << "ENHORABUENA USTED A LOGRADO COMPLETAR EL SUDOKU!!" << endl;
+				opcion = 6;
+			}
+			else {
+				opcion = menu();
+			}
 		}
 		cout << "Usted ha elegido la opcion 6.- salir." << endl;
 	}
@@ -98,7 +111,7 @@ int menu() {
 }
 
 void abrirArchivo(bool& exito, ifstream& archivo) {
-	archivo.open(nombre_arch1);
+	archivo.open(nombre_arch2);
 	if (!archivo.is_open()) {
 		exito = false;
 	}

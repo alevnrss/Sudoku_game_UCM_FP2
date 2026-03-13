@@ -139,3 +139,55 @@ bool quitar_valor_sudoku(tSudoku& s, int f, int c) {
 	}
 	return e;
 }
+
+// PASO 5: reset, autocompleta y terminado
+void reset(tSudoku& s) {
+	int contadorCeldasOriginales = 0;
+
+	for (int fila = 0; fila < s.tablero.dimension; fila++) {
+		for (int columna = 0; columna < s.tablero.dimension; columna++) {
+			if (s.tablero.matriz[fila][columna].estado != ORIGINAL) {
+				inicializaCelda(s.tablero.matriz[fila][columna]);
+			}
+			else {
+				contadorCeldasOriginales++;
+			}
+		}
+	}
+	s.cont_numeros = contadorCeldasOriginales;
+	s.celdas_bloqueadas.cont = 0;
+}
+
+void autocompleta(tSudoku& s) {
+	for (int fila = 0; fila < s.tablero.dimension; fila++) {
+		for (int columna = 0; columna < s.tablero.dimension; columna++) {
+			
+			// Subtarea 1: Comprobamos si esta VACIA
+			if (es_vacia(s.tablero.matriz[fila][columna])) {
+				int contadorPosibles = 0;
+				int valorDetectado = 0;
+
+				// Subtarea 2: Probamos valores si esta VACIA (1-9)
+				for (int v = 1; v <= 9; v++) {
+					if (es_valor_posible(s, {fila, columna}, v)) {
+						contadorPosibles++;
+						valorDetectado = v;
+					}
+				}
+
+				// Subtarea 3: Importante comprobar que si hay un solo posible rellenar de inmediato
+				if (contadorPosibles == 1) {
+					pon_valor_sudoku(s, fila, columna, valorDetectado);
+				}
+			}
+
+		}
+	}
+
+
+}
+
+bool terminado(const tSudoku& s) {
+	// La dimension al ser 9, 9x9 es 81. Si el contador llega a ser 81 entonces se acabo el sudoku
+	return s.cont_numeros == (s.tablero.dimension * s.tablero.dimension);
+}
