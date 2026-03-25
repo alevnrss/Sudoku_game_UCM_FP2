@@ -34,6 +34,7 @@ void pon_valor(tCelda& c, int v) {
 }
 void pon_vacia(tCelda& c) {
 	c.estado = VACIA;
+	c.valor = 0;
 }
 void pon_original(tCelda& c) {
 	c.estado = ORIGINAL;

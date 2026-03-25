@@ -1,4 +1,5 @@
 #include "Sudoku.h"
+#include <iostream>
 
 void inicializaSudoku(tSudoku& s, int d) {
 	inicializaTablero(s.tablero, d);		// subprograma de Tablero.cpp
@@ -123,7 +124,107 @@ bool es_valor_posible(const tSudoku& s, tPosicion pos, int v) {
 		return e;
 	}
 	
+}
+void valores_posibles(const tSudoku& s, tPosicion pos) {
+	cout << "Los valores posibles son: ";
+	for (int i = 1; i < 10; i++) {
+		if (es_valor_posible(s, pos, i) == true) {
+			cout << i << " ";
+		}
+	}
+	cout << "\n";
+}
 
+//paso 6 Subprogranas privados para comprobar bloqueos
+bool esta_en_bloqueadas(const tSudoku& s, tPosicion pos) {
+	bool encontrada = false;
+	int i = 0;
+	while (!encontrada && i < s.celdas_bloqueadas.cont) {
+		if (s.celdas_bloqueadas.bloqueadas[i].fila == pos.fila &&
+			s.celdas_bloqueadas.bloqueadas[i].columna == pos.columna) {
+			encontrada = true;
+		}
+		else {
+			i++;
+		}
+	}
+	return encontrada;
+}
+
+//si la celda es vacia, sin valores posibles, y no esta ya bloqueada entonces la añade
+void comprueba_y_bloquea(tSudoku& s, tPosicion pos) {
+	if (es_vacia(s.tablero.matriz[pos.fila][pos.columna]) && !esta_en_bloqueadas(s, pos)) {
+		bool tiene_posible = false;
+		int v = 1;
+		while (!tiene_posible && v <= s.tablero.dimension) {
+			if (es_valor_posible(s, pos, v)) {
+				tiene_posible = true;
+			}
+			else {
+				v++;
+			}
+		}
+		if (!tiene_posible) {
+			s.celdas_bloqueadas.bloqueadas[s.celdas_bloqueadas.cont] = pos;
+			s.celdas_bloqueadas.cont++;
+		}
+	}
+}
+
+void incorpora_celdas_bloqueadas(tSudoku& s, int f, int c) {
+	tPosicion pos;
+
+	// Recorre la fila f
+	for (int col = 0; col < s.tablero.dimension; col++) {
+		pos = { f, col };
+		comprueba_y_bloquea(s, pos);
+	}
+
+	// Recorre la columna c
+	for (int fila = 0; fila < s.tablero.dimension; fila++) {
+		pos = { fila, c };
+		comprueba_y_bloquea(s, pos);
+	}
+
+	// Recorre la subcuadricula a la que pertenece (f,c)
+	int raiz = sqrt(s.tablero.dimension);
+	int fila_inicio = f - (f % raiz);
+	int col_inicio = c - (c % raiz);
+	for (int fi = fila_inicio; fi < fila_inicio + raiz; fi++) {
+		for (int ci = col_inicio; ci < col_inicio + raiz; ci++) {
+			pos = { fi, ci };
+			comprueba_y_bloquea(s, pos);
+		}
+	}
+
+}
+// PASO 7 - privado
+void quita_celdas_bloqueadas(tSudoku& s) {
+	int i = 0;
+	while (i < s.celdas_bloqueadas.cont) {
+		tPosicion pos = s.celdas_bloqueadas.bloqueadas[i];
+
+		bool tiene_posible = false;
+		int v = 1;
+		while (!tiene_posible && v <= s.tablero.dimension) {
+			if (es_valor_posible(s, pos, v)) {
+				tiene_posible = true;
+			}
+			else {
+				v++;
+			}
+		}
+
+		if (tiene_posible) {
+			for (int j = i; j < s.celdas_bloqueadas.cont - 1; j++) {
+				s.celdas_bloqueadas.bloqueadas[j] = s.celdas_bloqueadas.bloqueadas[j + 1];
+			}
+			s.celdas_bloqueadas.cont--;
+		}
+		else {
+			i++;
+		}
+	}
 }
 
 bool pon_valor_sudoku(tSudoku& s, int f, int c, int v) {
@@ -132,6 +233,7 @@ bool pon_valor_sudoku(tSudoku& s, int f, int c, int v) {
 		pon_valor(s.tablero.matriz[f][c], v);	// Subprograma de Celda.cpp
 		pon_ocupada(s.tablero.matriz[f][c]);	// Subprograma de Celda.cpp
 		s.cont_numeros++;
+		incorpora_celdas_bloqueadas(s, f, c);
 		e = true;
 	}
 	return e;
@@ -142,6 +244,7 @@ bool quitar_valor_sudoku(tSudoku& s, int f, int c) {
 	if (es_vacia(s.tablero.matriz[f][c]) == false && es_original(s.tablero.matriz[f][c]) == false) {
 		pon_vacia(s.tablero.matriz[f][c]);	// Subprograma de Celda.cpp
 		s.cont_numeros--;
+		quita_celdas_bloqueadas(s);
 		e = true;
 	}
 	return e;
@@ -198,3 +301,20 @@ bool terminado(const tSudoku& s) {
 	// La dimension al ser 9, 9x9 es 81. Si el contador llega a ser 81 entonces se acabo el sudoku
 	return s.cont_numeros == (s.tablero.dimension * s.tablero.dimension);
 }
+
+bool bloqueo(const tSudoku& s) {
+	return s.celdas_bloqueadas.cont > 0;
+}
+
+int dame_num_celdas_bloqueadas(const tSudoku& s) {
+	return s.celdas_bloqueadas.cont;
+}
+
+void dame_celda_bloqueada(const tSudoku& s, int p, int& f, int& c) {
+	f = s.celdas_bloqueadas.bloqueadas[p].fila;
+	c = s.celdas_bloqueadas.bloqueadas[p].columna;
+}
+
+
+
+

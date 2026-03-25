@@ -42,10 +42,15 @@ tCelda dame_celda(const tSudoku& s, int fila, int columna);
 bool terminado(const tSudoku& s);
 bool esValida(tPosicion pos, const tSudoku& s);
 bool es_valor_posible(const tSudoku& s, tPosicion pos, int v);
-
+void valores_posibles(const tSudoku& s, tPosicion pos);
 // Operaciones de modificacion del estado
 bool pon_valor_sudoku(tSudoku& s, int f, int c, int v);
 bool quitar_valor_sudoku(tSudoku& s, int f, int c);
 void reset(tSudoku& s);
 void autocompleta(tSudoku& s);
+
+//Consulta bloqueos
+bool bloqueo(const tSudoku& s);
+int dame_num_celdas_bloqueadas(const tSudoku& s);
+void dame_celda_bloqueada(const tSudoku& s, int p, int& f, int& c);
 #endif

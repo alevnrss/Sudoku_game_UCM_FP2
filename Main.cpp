@@ -75,6 +75,15 @@ int main() {
 				cout << "Las posiciones VACIAS del sudoku con un unico valor se han completado correctamente";
 				break;
 			}
+			if (bloqueo(s)) {
+				cout << "Sudoku bloqueado.....Las casillas bloqueadas son: ";
+				for (int i = 0; i < dame_num_celdas_bloqueadas(s); i++) {
+					int f, c;
+					dame_celda_bloqueada(s, i, f, c);
+					cout << "(" << f + 1 << "," << c + 1 << ") ";
+				}
+				cout << endl;
+			}
 			mostrar_juego_consola(s);
 
 			if (terminado(s)) {
@@ -122,11 +131,22 @@ void abrirArchivo(bool& exito, ifstream& archivo) {
 
 tPosicion pide_pos() {
 	tPosicion pos;
-	cout << "Introduce la fila: "<<endl;
-	cin >> pos.fila;
-	cout << "Introduce la columna: " << endl;
-	cin >> pos.columna;
-
+	pos.fila = 0;
+	pos.columna = 0;
+	while (pos.fila < 1 || pos.fila > 9) {
+		cout << "Introduce la fila: " << endl;
+		cin >> pos.fila;
+		if(pos.fila < 1 || pos.fila > 9){
+			cout<<"Fila no valida, introducela de nuevo"<<endl;
+		}
+	}
+	while (pos.columna < 1 || pos.columna > 9) {
+		cout << "Introduce la columna: " << endl;
+		cin >> pos.columna;
+		if(pos.columna < 1 || pos.columna > 9){
+			cout<<"Columna no valida, introducela de nuevo"<<endl;
+		}
+	}
 	pos.fila = pos.fila -1 ;
 	pos.columna = pos.columna -1;
 	return pos;
@@ -140,15 +160,3 @@ int pide_valor() {
 }
 
 
-void valores_posibles(const tSudoku& s, tPosicion pos) {
-	cout << "Los valores posibles son: ";
-	for (int i = 1; i < 10; i++) {
-		if (es_valor_posible(s, pos, i) == true) {
-			cout << i << " ";
-		}
-	}
-	cout << "\n";
-}
-
-
-//paso 4
