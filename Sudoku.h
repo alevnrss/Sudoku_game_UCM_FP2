@@ -24,11 +24,22 @@ struct tBloqueos {
 	tPosicion bloqueadas[DIM * DIM];
 };
 
+struct tValor {
+	bool posible;
+	int celdas_que_afectan;
+};
+struct tValores {
+	int dimension;
+	tValor valores[DIM][DIM][DIM];
+};
+
 struct tSudoku {
 	tTablero tablero;
 	int cont_numeros;// contador de celdas no vacias
 	tBloqueos celdas_bloqueadas;
+	tValores valores_celda;
 };
+
 
 // SUBPROGRAMAS PUBLICOS
 

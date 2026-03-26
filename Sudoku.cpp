@@ -5,6 +5,48 @@ void inicializaSudoku(tSudoku& s, int d) {
 	inicializaTablero(s.tablero, d);		// subprograma de Tablero.cpp
 	s.cont_numeros = 0;
 	s.celdas_bloqueadas.cont = 0;
+	for (int i = 0; i < d; i++) {
+		for (int j = 0; j < d; j++) {
+			for(int k = 0; k < d; k++) {
+				s.valores_celda.valores[i][j][k].posible = true;
+				s.valores_celda.valores[i][j][k].celdas_que_afectan = 0;
+			}
+		}
+	}
+}
+
+//funciones refactorizar cargar sudoku
+void actualiza_valor_celda(tSudoku& s, int f, int c, int v) { // actualiza una celda concreta para el valor v
+	int idx = v - 1;
+	if (s.valores_celda.valores[f][c][idx].posible) {
+		s.valores_celda.valores[f][c][idx].posible = false;
+		s.valores_celda.valores[f][c][idx].celdas_que_afectan = 1;
+	}
+	else {
+		s.valores_celda.valores[f][c][idx].celdas_que_afectan++;
+	}
+}
+void annade_celdas_afectadas(tSudoku& s, int f, int c, int v) {
+	//filas
+	for (int col = 0; col < s.tablero.dimension; col++) {
+		if (col != c)
+			actualiza_valor_celda(s, f, col, v);
+	}
+	// Columnas
+	for (int fila = 0; fila < s.tablero.dimension; fila++) {
+		if (fila != f)
+			actualiza_valor_celda(s, fila, c, v);
+	}
+	// Subcuadricula
+	int raiz = sqrt(s.tablero.dimension);
+	int fi = f - (f % raiz);
+	int ci = c - (c % raiz);
+	for (int ff = fi; ff < fi + raiz; ff++) {
+		for (int cc = ci; cc < ci + raiz; cc++) {
+			if (ff != f || cc != c)
+				actualiza_valor_celda(s, ff, cc, v);
+		}
+	}
 }
 
 bool carga_sudoku(ifstream& archivo, tSudoku& s) {
@@ -25,6 +67,7 @@ bool carga_sudoku(ifstream& archivo, tSudoku& s) {
 			else {
 				inicializaCelda(celda, valor, ORIGINAL);	// Subprograma de Celda.cpp
 				s.cont_numeros++;
+				annade_celdas_afectadas(s, fila, columna, valor); 
 			}
 
 			pon_elemento(s.tablero, fila, columna, celda);	// Subprograma de Tablero.cpp
@@ -34,6 +77,82 @@ bool carga_sudoku(ifstream& archivo, tSudoku& s) {
 	return exito;
 }
 
+//refactorizacion funciones
+
+
+void restaura_valor_celda(tSudoku& s, int f, int c, int v) { // restaura una celda concreta para el valor v
+	int idx = v - 1; 
+		s.valores_celda.valores[f][c][idx].celdas_que_afectan--;
+	if(s.valores_celda.valores[f][c][idx].celdas_que_afectan==0) {
+		s.valores_celda.valores[f][c][idx].posible = true;
+	}
+}
+void elimina_celdas_afectadas(tSudoku& s, int f, int c, int v) {
+	// Filas
+	for (int col = 0; col < s.tablero.dimension; col++) {
+		if (col != c)
+			restaura_valor_celda(s, f, col, v);
+	}
+	// Columnas
+	for (int fila = 0; fila < s.tablero.dimension; fila++) {
+		if (fila != f)
+			restaura_valor_celda(s, fila, c, v);
+	}
+	// Subcuadricula
+	int raiz = sqrt(s.tablero.dimension);
+	int fi = f - (f % raiz);
+	int ci = c - (c % raiz);
+	for (int ff = fi; ff < fi + raiz; ff++) {
+		for (int cc = ci; cc < ci + raiz; cc++) {
+			if (ff != f || cc != c)
+				restaura_valor_celda(s, ff, cc, v);
+		}
+	}
+}
+
+// PASO 7 - privado
+void quita_celdas_bloqueadas(tSudoku& s) {
+	int i = 0;
+	while (i < s.celdas_bloqueadas.cont) {
+		tPosicion pos = s.celdas_bloqueadas.bloqueadas[i];
+
+		bool tiene_posible = false;
+		int v = 1;
+		while (!tiene_posible && v <= s.tablero.dimension) {
+			if (es_valor_posible(s, pos, v)) {
+				tiene_posible = true;
+			}
+			else {
+				v++;
+			}
+		}
+
+		if (tiene_posible) {
+			for (int j = i; j < s.celdas_bloqueadas.cont - 1; j++) {
+				s.celdas_bloqueadas.bloqueadas[j] = s.celdas_bloqueadas.bloqueadas[j + 1];
+			}
+			s.celdas_bloqueadas.cont--;
+		}
+		else {
+			i++;
+		}
+	}
+}
+
+bool quitar_valor_sudoku(tSudoku& s, int f, int c) {
+	bool e = false;
+	int v;
+	if (es_vacia(s.tablero.matriz[f][c]) == false && es_original(s.tablero.matriz[f][c]) == false) {
+		v = dame_valor(s.tablero.matriz[f][c]);  // guardo el valor antes de borrarlo para poder usar en eliminar las celdas afectadas
+		pon_vacia(s.tablero.matriz[f][c]);
+		s.cont_numeros--;
+		elimina_celdas_afectadas(s, f, c, v);
+		quita_celdas_bloqueadas(s);
+		e = true;
+	}
+	return e;
+}
+//fin funciones de refactorizacion
 int dame_dimension(const tSudoku& s) {
 	int dimension = s.tablero.dimension;
 	return dimension;
@@ -114,12 +233,7 @@ bool es_valor_posible(const tSudoku& s, tPosicion pos, int v) {
 		e = false;
 	}
 	else {
-		if (busqueda_valor_filacolumna(s, pos, v) == true || buscar_subcuadricula(s, pos, v) == true || esValida(pos, s) == false) {
-			e = false;
-		}
-		else {
-			e = true;
-		}
+		e = s.valores_celda.valores[pos.fila][pos.columna][v - 1].posible;
 
 		return e;
 	}
@@ -198,34 +312,6 @@ void incorpora_celdas_bloqueadas(tSudoku& s, int f, int c) {
 	}
 
 }
-// PASO 7 - privado
-void quita_celdas_bloqueadas(tSudoku& s) {
-	int i = 0;
-	while (i < s.celdas_bloqueadas.cont) {
-		tPosicion pos = s.celdas_bloqueadas.bloqueadas[i];
-
-		bool tiene_posible = false;
-		int v = 1;
-		while (!tiene_posible && v <= s.tablero.dimension) {
-			if (es_valor_posible(s, pos, v)) {
-				tiene_posible = true;
-			}
-			else {
-				v++;
-			}
-		}
-
-		if (tiene_posible) {
-			for (int j = i; j < s.celdas_bloqueadas.cont - 1; j++) {
-				s.celdas_bloqueadas.bloqueadas[j] = s.celdas_bloqueadas.bloqueadas[j + 1];
-			}
-			s.celdas_bloqueadas.cont--;
-		}
-		else {
-			i++;
-		}
-	}
-}
 
 bool pon_valor_sudoku(tSudoku& s, int f, int c, int v) {
 	bool e = false;
@@ -233,31 +319,24 @@ bool pon_valor_sudoku(tSudoku& s, int f, int c, int v) {
 		pon_valor(s.tablero.matriz[f][c], v);	// Subprograma de Celda.cpp
 		pon_ocupada(s.tablero.matriz[f][c]);	// Subprograma de Celda.cpp
 		s.cont_numeros++;
+		annade_celdas_afectadas(s, f, c, v);
 		incorpora_celdas_bloqueadas(s, f, c);
 		e = true;
 	}
 	return e;
 }
 
-bool quitar_valor_sudoku(tSudoku& s, int f, int c) {
-	bool e = false;
-	if (es_vacia(s.tablero.matriz[f][c]) == false && es_original(s.tablero.matriz[f][c]) == false) {
-		pon_vacia(s.tablero.matriz[f][c]);	// Subprograma de Celda.cpp
-		s.cont_numeros--;
-		quita_celdas_bloqueadas(s);
-		e = true;
-	}
-	return e;
-}
 
 // PASO 5: reset, autocompleta y terminado
 void reset(tSudoku& s) {
 	int contadorCeldasOriginales = 0;
-
+	int v;
 	for (int fila = 0; fila < s.tablero.dimension; fila++) {
 		for (int columna = 0; columna < s.tablero.dimension; columna++) {
 			if (s.tablero.matriz[fila][columna].estado != ORIGINAL) {
+				v = dame_valor(s.tablero.matriz[fila][columna]);
 				inicializaCelda(s.tablero.matriz[fila][columna]);
+				elimina_celdas_afectadas(s, fila, columna, v);
 			}
 			else {
 				contadorCeldasOriginales++;
@@ -272,20 +351,20 @@ void autocompleta(tSudoku& s) {
 	for (int fila = 0; fila < s.tablero.dimension; fila++) {
 		for (int columna = 0; columna < s.tablero.dimension; columna++) {
 			
-			// Subtarea 1: Comprobamos si esta VACIA
+			//comprobamos si esta VACIA
 			if (es_vacia(s.tablero.matriz[fila][columna])) {
 				int contadorPosibles = 0;
 				int valorDetectado = 0;
 
-				// Subtarea 2: Probamos valores si esta VACIA (1-9)
-				for (int v = 1; v <= 9; v++) {
-					if (es_valor_posible(s, {fila, columna}, v)) {
+				// probamos valores si esta VACIA (1-9)
+				for (int v = 0; v < 9; v++) {
+					if (s.valores_celda.valores[fila][columna][v].posible) {
 						contadorPosibles++;
-						valorDetectado = v;
+						valorDetectado = v+1;
 					}
 				}
 
-				// Subtarea 3: Importante comprobar que si hay un solo posible rellenar de inmediato
+				// comprobar que si hay un solo posible rellenar de inmediato
 				if (contadorPosibles == 1) {
 					pon_valor_sudoku(s, fila, columna, valorDetectado);
 				}
