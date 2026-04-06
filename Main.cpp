@@ -105,7 +105,7 @@ int menu() {
 	while (opcion < 1 || opcion > 6) {
 		cout << "1.- poner valor" << endl;
 		cout << "2.- quitar valor" << endl;
-		cout << "3.- reset valor" << endl;
+		cout << "3.- reset" << endl;
 		cout << "4.- posibles valores de una celda vacia" << endl;
 		cout << "5.- autocompletar celdas con valor unico" << endl;
 		cout << "6.- salir" << endl;

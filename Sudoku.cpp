@@ -2,7 +2,7 @@
 #include <iostream>
 
 void inicializaSudoku(tSudoku& s, int d) {
-	inicializaTablero(s.tablero, d);		// subprograma de Tablero.cpp
+	inicializaTablero(s.tablero, d);		
 	s.cont_numeros = 0;
 	s.celdas_bloqueadas.cont = 0;
 	for (int i = 0; i < d; i++) {
@@ -62,15 +62,15 @@ bool carga_sudoku(ifstream& archivo, tSudoku& s) {
 			tCelda celda;
 
 			if (valor == 0) {
-				inicializaCelda(celda);	// subprograma de Celda.cpp
+				inicializaCelda(celda);	
 			}
 			else {
-				inicializaCelda(celda, valor, ORIGINAL);	// Subprograma de Celda.cpp
+				inicializaCelda(celda, valor, ORIGINAL);	
 				s.cont_numeros++;
 				annade_celdas_afectadas(s, fila, columna, valor); 
 			}
 
-			pon_elemento(s.tablero, fila, columna, celda);	// Subprograma de Tablero.cpp
+			pon_elemento(s.tablero, fila, columna, celda);	
 		}
 	}
 	exito = true;
@@ -164,7 +164,7 @@ tCelda dame_celda(const tSudoku& s, int f, int c) {
 
 bool esValida(tPosicion pos, const tSudoku& s) {
 	bool e;
-	if ((pos.fila > s.tablero.dimension || pos.fila < 0) || (pos.columna > s.tablero.dimension || pos.columna < 0) || (es_vacia(s.tablero.matriz[pos.fila][pos.columna]) == false)) {
+	if ((pos.fila >= s.tablero.dimension || pos.fila < 0) || (pos.columna >= s.tablero.dimension || pos.columna < 0) || (es_vacia(s.tablero.matriz[pos.fila][pos.columna]) == false)) {
 		e = false;
 	}
 	else {
@@ -235,9 +235,8 @@ bool es_valor_posible(const tSudoku& s, tPosicion pos, int v) {
 	else {
 		e = s.valores_celda.valores[pos.fila][pos.columna][v - 1].posible;
 
-		return e;
 	}
-	
+	return e;
 }
 void valores_posibles(const tSudoku& s, tPosicion pos) {
 	cout << "Los valores posibles son: ";
@@ -316,8 +315,8 @@ void incorpora_celdas_bloqueadas(tSudoku& s, int f, int c) {
 bool pon_valor_sudoku(tSudoku& s, int f, int c, int v) {
 	bool e = false;
 	if (es_valor_posible(s, {f,c}, v) == true) {
-		pon_valor(s.tablero.matriz[f][c], v);	// Subprograma de Celda.cpp
-		pon_ocupada(s.tablero.matriz[f][c]);	// Subprograma de Celda.cpp
+		pon_valor(s.tablero.matriz[f][c], v);	
+		pon_ocupada(s.tablero.matriz[f][c]);	
 		s.cont_numeros++;
 		annade_celdas_afectadas(s, f, c, v);
 		incorpora_celdas_bloqueadas(s, f, c);
@@ -333,12 +332,12 @@ void reset(tSudoku& s) {
 	int v;
 	for (int fila = 0; fila < s.tablero.dimension; fila++) {
 		for (int columna = 0; columna < s.tablero.dimension; columna++) {
-			if (s.tablero.matriz[fila][columna].estado != ORIGINAL) {
+			if (s.tablero.matriz[fila][columna].estado == OCUPADA) {
 				v = dame_valor(s.tablero.matriz[fila][columna]);
 				inicializaCelda(s.tablero.matriz[fila][columna]);
 				elimina_celdas_afectadas(s, fila, columna, v);
 			}
-			else {
+			else if(s.tablero.matriz[fila][columna].estado==ORIGINAL){
 				contadorCeldasOriginales++;
 			}
 		}
@@ -357,7 +356,7 @@ void autocompleta(tSudoku& s) {
 				int valorDetectado = 0;
 
 				// probamos valores si esta VACIA (1-9)
-				for (int v = 0; v < 9; v++) {
+				for (int v = 0; v < s.tablero.dimension; v++) {
 					if (s.valores_celda.valores[fila][columna][v].posible) {
 						contadorPosibles++;
 						valorDetectado = v+1;
