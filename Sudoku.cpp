@@ -1,5 +1,6 @@
 #include "Sudoku.h"
 #include <iostream>
+#include <cmath>
 
 void inicializaSudoku(tSudoku& s, int d) {
 	inicializaTablero(s.tablero, d);		
@@ -240,7 +241,7 @@ bool es_valor_posible(const tSudoku& s, tPosicion pos, int v) {
 }
 void valores_posibles(const tSudoku& s, tPosicion pos) {
 	cout << "Los valores posibles son: ";
-	for (int i = 1; i < 10; i++) {
+	for (int i = 1; i <= s.tablero.dimension; i++) {
 		if (es_valor_posible(s, pos, i) == true) {
 			cout << i << " ";
 		}
@@ -347,32 +348,31 @@ void reset(tSudoku& s) {
 }
 
 void autocompleta(tSudoku& s) {
-	for (int fila = 0; fila < s.tablero.dimension; fila++) {
-		for (int columna = 0; columna < s.tablero.dimension; columna++) {
-			
-			//comprobamos si esta VACIA
-			if (es_vacia(s.tablero.matriz[fila][columna])) {
-				int contadorPosibles = 0;
-				int valorDetectado = 0;
+	bool cambios;
+	do {
+		cambios = false;
+		for (int fila = 0; fila < s.tablero.dimension; fila++) {
+			for (int columna = 0; columna < s.tablero.dimension; columna++) {
 
-				// probamos valores si esta VACIA (1-9)
-				for (int v = 0; v < s.tablero.dimension; v++) {
-					if (s.valores_celda.valores[fila][columna][v].posible) {
-						contadorPosibles++;
-						valorDetectado = v+1;
+				if (es_vacia(s.tablero.matriz[fila][columna])) {
+					int contadorPosibles = 0;
+					int valorDetectado = 0;
+
+					for (int v = 0; v < s.tablero.dimension; v++) {
+						if (s.valores_celda.valores[fila][columna][v].posible) {
+							contadorPosibles++;
+							valorDetectado = v + 1;
+						}
+					}
+
+					if (contadorPosibles == 1) {
+						pon_valor_sudoku(s, fila, columna, valorDetectado);
+						cambios = true; 
 					}
 				}
-
-				// comprobar que si hay un solo posible rellenar de inmediato
-				if (contadorPosibles == 1) {
-					pon_valor_sudoku(s, fila, columna, valorDetectado);
-				}
 			}
-
 		}
-	}
-
-
+	} while (cambios);
 }
 
 bool terminado(const tSudoku& s) {
@@ -396,8 +396,8 @@ void dame_celda_bloqueada(const tSudoku& s, int p, int& f, int& c) {
 // version 2
 int dame_num_celdas_libres(const tSudoku& s) {
 	int contador = 0; 
-	for (int f = 0; f < DIM; f++) {
-		for (int c = 0; c < DIM; c++) {
+	for (int f = 0; f < s.tablero.dimension; f++) {
+		for (int c = 0; c < s.tablero.dimension; c++) {
 			if (s.tablero.matriz[f][c].valor == 0) {
 				contador++;
 			}
@@ -433,7 +433,7 @@ bool operator==(const tSudoku& s1, const tSudoku& s2) {
 	if (dame_num_celdas_libres(s1) == dame_num_celdas_libres(s2)) {
 		arrValores av1, av2;
 		numero_posibles_valores(s1, av1);
-		numero_posibles_valores(s1, av2);
+		numero_posibles_valores(s2, av2);
 
 		int i = 0; 
 		while (i < DIM && av1[i] == av2[i]) {

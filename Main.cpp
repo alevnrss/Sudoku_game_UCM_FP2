@@ -2,7 +2,8 @@
 #include "Tablero.h"
 #include "Sudoku.h"
 #include "InputOutput.h"
-
+#include "ListaSudokus.h"
+#include "checkML.h"
 #include <iostream>
 #include <fstream>
 #include <cmath>
@@ -18,85 +19,53 @@ int menu();
 tPosicion pide_pos();
 int pide_valor();
 void valores_posibles(const tSudoku& s, tPosicion pos);
+
+// Subprogramas version 2
+bool cargar_lista_sudokus_nuevos(string nombre_fichero, tListaSudokus& l );
+void ejecutar_opcion(int opcion, tSudoku& s);
+bool cargar_lista_sudokus_comenzados(string nombre_fichero, tListaSudokus& ls);
+void guardar_lista_sudokus_comenzados(string nombre_fichero, const tListaSudokus& ls);
+bool jugar(tSudoku& s);
+
 int main() {
-	bool exito = false;
-	ifstream archivo;
-	tSudoku s;
-	tPosicion pos_introducido; //pos puesto por el usuario paso 3
-	int valor_introducido; //valor puesto por el usuario paso 4
+	_CrtSetDbgFlag(_CRTDBG_ALLOC_MEM_DF | _CRTDBG_LEAK_CHECK_DF);
+	//int* punt = new int(4);  --> comprobar fugas
+	tListaSudokus lista;
+	inicializa_lista_sudokus(lista);
 
-	abrirArchivo(exito, archivo);
-	if (!exito) {
-		cout << "No se ha logrado abrir el archivo correctamente" << endl;
+	if (!cargar_lista_sudokus_comenzados("lista_comenzados.txt", lista)) {
+
+		cargar_lista_sudokus_nuevos("lista_sudokus.txt", lista);
 	}
-	else {
-		int opcion = 0;
-		cout << "Archivo abierto correctamente" << endl;
-		carga_sudoku(archivo, s);
-		mostrar_juego_consola(s);
-		opcion = menu();
-		while (opcion != 6) {
-			switch (opcion) {
-			case 1: 
-				pos_introducido = pide_pos();
-				valor_introducido = pide_valor();
-				if(pon_valor_sudoku(s,pos_introducido.fila,pos_introducido.columna,valor_introducido) == true){
-					cout<<"Valor introducido correctamente"<<endl;
-				}
-				else{
-					cout<<"Valor introducido no valido"<<endl;
-				}
 
-				break;
-			case 2:
-				pos_introducido = pide_pos();
-				if(quitar_valor_sudoku(s,pos_introducido.fila,pos_introducido.columna) == true){
-					cout<<"Valor quitado correctamente"<<endl;
-				}
-				else{
-					cout<<"Valor introducido no valido"<<endl;
-				}
-				break;
-			case 3:
-				reset(s);
-				cout << "El sudoku ha sido restaurado correctamente";
-				break;
-			case 4:
-				pos_introducido = pide_pos();
-				if (esValida(pos_introducido, s) == false) {
-					cout << "Posicion introducida no valida" << endl;
-				}
-				else {
-					valores_posibles(s, pos_introducido);
-				}
-				break;
-			case 5: 
-				autocompleta(s);
-				cout << "Las posiciones VACIAS del sudoku con un unico valor se han completado correctamente";
-				break;
-			}
-			if (bloqueo(s)) {
-				cout << "Sudoku bloqueado.....Las casillas bloqueadas son: ";
-				for (int i = 0; i < dame_num_celdas_bloqueadas(s); i++) {
-					int f, c;
-					dame_celda_bloqueada(s, i, f, c);
-					cout << "(" << f + 1 << "," << c + 1 << ") ";
-				}
-				cout << endl;
-			}
-			mostrar_juego_consola(s);
+	int opcionLista = -1;
+	while (opcionLista != 0) {
+		cout << "--- MENU PRINCIPAL: SUDOKU ---" << endl;
+		mostrar_lista(lista);
+		cout << "0.- Salir y GUARDAR todo" << endl;
+		cout << "Elige un sudoku (1 a " << dame_num_elems(lista) << "): ";
+		cin >> opcionLista;
 
-			if (terminado(s)) {
-				cout << "ENHORABUENA USTED A LOGRADO COMPLETAR EL SUDOKU!!" << endl;
-				opcion = 6;
+		if (opcionLista > 0 && opcionLista <= dame_num_elems(lista)) {
+			
+			tSudoku* s = dame_sudoku(lista, opcionLista - 1);
+
+			bool abandonado = jugar(*s);
+
+			if (!abandonado) {
+				cout << "ENHORABUENA, Lo has terminado." << endl;
+				
 			}
 			else {
-				opcion = menu();
+				cout << "Partida pausada. Se guardara tu progreso." << endl;
 			}
 		}
-		cout << "Usted ha elegido la opcion 6.- salir." << endl;
 	}
+	
+	guardar_lista_sudokus_comenzados("lista_comenzados.txt", lista);
+	destruye_lista_sudokus(lista);
 
+	cout << "Hasta pronto" << endl;
 	return 0;
 }
 
@@ -157,6 +126,170 @@ int pide_valor() {
 	cout << "Introduce el valor: " << endl;
 	cin >> valor;
 	return valor;
+}
+
+void ejecutar_opcion(int opcion, tSudoku& s) {
+	tPosicion pos;
+	int valor;
+
+	switch (opcion) {
+	case 1: // Poner
+		pos = pide_pos();
+		valor = pide_valor();
+		if (!pon_valor_sudoku(s, pos.fila, pos.columna, valor))
+			cout << "Movimiento no permitido." << endl;
+		break;
+	case 2: // Quitar
+		pos = pide_pos();
+		if (!quitar_valor_sudoku(s, pos.fila, pos.columna))
+			cout << "No se puede quitar ese valor." << endl;
+		break;
+	case 3: // Reset
+		reset(s);
+		break;
+	case 4: // Sugerencia
+		pos = pide_pos();
+		valores_posibles(s, pos);
+		break;
+	case 5: // Autocompletar
+		autocompleta(s);
+		break;
+	}
+}
+
+bool cargar_lista_sudokus_nuevos(string nombre_fichero, tListaSudokus& l) {
+	ifstream archivo;
+	archivo.open(nombre_fichero);
+	bool exito = false;
+
+	if (archivo.is_open()) {
+		int numSudokus;
+		archivo >> numSudokus;
+
+		string nombreSudoku;
+		for (int i = 0; i < numSudokus; i++) {
+			archivo >> nombreSudoku;
+			tSudoku* s = new tSudoku;
+			ifstream fSudoku;
+			fSudoku.open(nombreSudoku);
+
+			if (fSudoku.is_open()) {
+				carga_sudoku(fSudoku, *s);
+				insertar(l, s);
+				fSudoku.close();
+			}
+			else {
+				delete s;
+			}
+
+		}
+
+		exito = true;
+		archivo.close();
+	}
+
+	return exito;
+}
+
+bool cargar_lista_sudokus_comenzados(string nombre_fichero, tListaSudokus& ls) {
+	ifstream archivo;
+	archivo.open(nombre_fichero);
+	bool exito = false;
+
+	if (archivo.is_open()) {
+		int numSudokus;
+		archivo >> numSudokus;
+		for (int i = 0; i < numSudokus; i++) {
+			tSudoku* s = new tSudoku;
+			if (carga_sudoku(archivo, *s)) {
+				int fila, col, valor;
+				archivo >> fila;
+				while (fila != -1) {
+					archivo >> col >> valor;
+					
+					pon_valor_sudoku(*s, fila, col, valor);
+					archivo >> fila; 
+				}
+				insertar(ls, s);
+			}
+			else {
+				delete s;
+			}
+		}
+		exito = true;
+		archivo.close();
+	}
+	return exito;
+}
+
+void guardar_lista_sudokus_comenzados(string nombre_fichero, const tListaSudokus& ls) {
+	ofstream archivo;
+	archivo.open(nombre_fichero);
+
+	if (archivo.is_open()) {
+		archivo << ls.cont << endl; 
+
+		for (int i = 0; i < ls.cont; i++) {
+			tSudoku* s = ls.sudokus[i];
+			archivo << s->tablero.dimension << endl;
+			for (int f = 0; f < s->tablero.dimension; f++) {
+				for (int c = 0; c < s->tablero.dimension; c++) {
+					if (es_original(s->tablero.matriz[f][c]))
+						archivo << dame_valor(s->tablero.matriz[f][c]) << " ";
+					else
+						archivo << "0 "; 
+				}
+				archivo << endl;
+			}
+
+			for (int f = 0; f < s->tablero.dimension; f++) {
+				for (int c = 0; c < s->tablero.dimension; c++) {
+					if (s->tablero.matriz[f][c].estado == OCUPADA) {
+						archivo << f << " " << c << " " << dame_valor(s->tablero.matriz[f][c]) << endl;
+					}
+				}
+			}
+			archivo << "-1" << endl; 
+		}
+		archivo.close();
+	}
+}
+
+bool jugar(tSudoku& s) {
+	int opcion = 0;
+	bool abandonado = false;
+
+	while (opcion != 6 && !terminado(s)) {
+		mostrar_juego_consola(s);
+
+		if (bloqueo(s)) {
+			if (bloqueo(s)) {
+				cout << "Has cometido un error previo. El Sudoku no tiene solucion actual." << endl;
+				cout << "Debes quitar algun valor para desbloquear las casillas: ";
+			}
+			for (int i = 0; i < dame_num_celdas_bloqueadas(s); i++) {
+				int f, c;
+				dame_celda_bloqueada(s, i, f, c);
+				cout << "(" << f + 1 << "," << c + 1 << ") ";
+			}
+			cout << endl;
+		}
+
+		opcion = menu();
+		if (opcion == 6) {
+			abandonado = true;
+		}
+		else {
+			ejecutar_opcion(opcion, s); // La función que hicimos antes
+		}
+	}
+
+	if (terminado(s)) {
+		mostrar_juego_consola(s);
+		cout << "Sudoku completado con exito" << endl;
+	}
+
+	return abandonado;
 }
 
 

@@ -21,14 +21,17 @@
   <ItemGroup>
     <ClCompile Include="Celda.cpp" />
     <ClCompile Include="InputOutput.cpp" />
+    <ClCompile Include="ListaSudokus.cpp" />
     <ClCompile Include="Main.cpp" />
     <ClCompile Include="Sudoku.cpp" />
     <ClCompile Include="Tablero.cpp" />
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="Celda.h" />
+    <ClInclude Include="checkML.h" />
     <ClInclude Include="colors.h" />
     <ClInclude Include="InputOutput.h" />
+    <ClInclude Include="ListaSudokus.h" />
     <ClInclude Include="Sudoku.h" />
     <ClInclude Include="Tablero.h" />
   </ItemGroup>
