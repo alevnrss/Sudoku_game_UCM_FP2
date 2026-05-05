@@ -15,6 +15,8 @@ using namespace std;
 
 
 // estructuras
+typedef int arrValores[DIM];
+
 struct tPosicion {
 	int fila, columna;
 };
@@ -54,6 +56,11 @@ bool terminado(const tSudoku& s);
 bool esValida(tPosicion pos, const tSudoku& s);
 bool es_valor_posible(const tSudoku& s, tPosicion pos, int v);
 void valores_posibles(const tSudoku& s, tPosicion pos);
+
+// version 2
+int dame_num_celdas_libres(const tSudoku& s);
+void numero_posibles_valores(const tSudoku& s, arrValores av);
+
 // Operaciones de modificacion del estado
 bool pon_valor_sudoku(tSudoku& s, int f, int c, int v);
 bool quitar_valor_sudoku(tSudoku& s, int f, int c);
@@ -64,4 +71,10 @@ void autocompleta(tSudoku& s);
 bool bloqueo(const tSudoku& s);
 int dame_num_celdas_bloqueadas(const tSudoku& s);
 void dame_celda_bloqueada(const tSudoku& s, int p, int& f, int& c);
+
+// version 2
+// sobrecargar de operaciones relacionales
+bool operator==(const tSudoku& s1, const tSudoku& s2);
+bool operator<(const tSudoku& s1, const tSudoku& s2);
+
 #endif

@@ -393,6 +393,81 @@ void dame_celda_bloqueada(const tSudoku& s, int p, int& f, int& c) {
 	c = s.celdas_bloqueadas.bloqueadas[p].columna;
 }
 
+// version 2
+int dame_num_celdas_libres(const tSudoku& s) {
+	int contador = 0; 
+	for (int f = 0; f < DIM; f++) {
+		for (int c = 0; c < DIM; c++) {
+			if (s.tablero.matriz[f][c].valor == 0) {
+				contador++;
+			}
+		}
+	}
 
+	return contador;
+}
+void numero_posibles_valores(const tSudoku& s, arrValores av) {
+	for (int i = 0; i < DIM; i++) {
+		av[i] = 0;	
+	}
+	for (int f = 0; f < s.tablero.dimension; f++) {
+		for (int c = 0; c < s.tablero.dimension; c++) {
+			if (es_vacia(s.tablero.matriz[f][c])) {
+				int nPosibles = 0;
+				for (int v = 1; v <= s.tablero.dimension; v++) {
+					if (es_valor_posible(s, {f , c}, v)) {
+						nPosibles++;
+					}
+				}
+				if (nPosibles > 0 && nPosibles <= DIM) {
+					av[nPosibles - 1]++;
+				}
+			}
+		}
+	}
+}
 
+bool operator==(const tSudoku& s1, const tSudoku& s2) {
+	bool iguales = false;
 
+	if (dame_num_celdas_libres(s1) == dame_num_celdas_libres(s2)) {
+		arrValores av1, av2;
+		numero_posibles_valores(s1, av1);
+		numero_posibles_valores(s1, av2);
+
+		int i = 0; 
+		while (i < DIM && av1[i] == av2[i]) {
+			i++;
+		}
+		iguales = (i == DIM);
+	
+	}
+
+	return iguales;
+}
+bool operator<(const tSudoku& s1, const tSudoku& s2) {
+	bool menor = false;
+	int libres1 = dame_num_celdas_libres(s1);
+	int libres2 = dame_num_celdas_libres(s2);
+
+	if (libres1 < libres2) {
+		menor = true;
+	}
+	else if (libres1 == libres2) {
+		arrValores av1, av2;
+		numero_posibles_valores(s1, av1);
+		numero_posibles_valores(s2, av2);
+
+		int i = 0;
+		while (i < DIM && av1[i] == av2[i]) {
+			i++;
+		}	
+
+		if (i < DIM) {
+			menor = av1[i] > av2[i];
+		}
+
+	}
+
+	return menor;
+}
