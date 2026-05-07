@@ -1,3 +1,5 @@
+//NOMBRES Y APELLIDOS: Leiton Campillos y Alejandro Veneros
+//GRUPO:7
 #include "Tablero.h"
 #include "Celda.h"
 

@@ -1,3 +1,5 @@
+//NOMBRES Y APELLIDOS: Leiton Campillos y Alejandro Veneros
+//GRUPO:7
 #ifndef celda_h
 #define celda_h
 

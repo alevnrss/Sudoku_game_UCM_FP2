@@ -1,3 +1,6 @@
+//NOMBRES Y APELLIDOS: Leiton Campillos y Alejandro Veneros
+//GRUPO:7
+#include "checkML.h"
 #include "ListaSudokus.h"
 #include <iostream>
 using namespace std;
